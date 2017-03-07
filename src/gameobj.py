@@ -1,9 +1,12 @@
 
 import sparsemap
+import terrain
 
 class World(object):
     def __init__(self):
         self.objects = sparsemap.SparseMap()
+        self.terrain = terrain.Terrain()
+        self.camera = (0, 0)
 
 class Component(object):
     def __init__(self, obj, **kargs):
