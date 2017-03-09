@@ -54,13 +54,18 @@ class DynamicArray(object):
         assert step == 1
 
         while start < stop:
-            yield (
-                slice(start - slice_.start,
-                      start - slice_.start + min(chunk_size, stop - start),
-                      step),
-                slice(start % chunk_size, min(chunk_size, stop - start), step),
-                start // chunk_size,
+            chunk_slice = slice(
+                start % chunk_size,
+                min(chunk_size,
+                    start % chunk_size + stop - start),
+                step,
                 )
+            array_slice = slice(
+                start - slice_.start,
+                start - slice_.start + (chunk_slice.stop - chunk_slice.start),
+                step,
+                )
+            yield(array_slice, chunk_slice, start // chunk_size)
             start = (start // chunk_size + 1) * chunk_size
 
     def _parse_index(self, index):
