@@ -5,7 +5,7 @@ import tcod
 
 import state
 import g
-import gameobj
+import gameobj as obj
 import world
 
 #FONT = 'data/terminal8x8_gs_ro.png'
@@ -17,13 +17,15 @@ HEIGHT = 576 // 12
 
 def main():
     g.world = world.World()
-    g.player = gameobj.GameObj(g.world)
-    g.player[gameobj.Location].move(0, 0)
-    g.player[gameobj.Graphic].ch = ord('@')
+    g.player = obj.GameObj(g.world)
+    g.player.location.move(0, 0)
+    g.player.graphic.ch = ord('@')
+    g.player.actor = obj.ActorPlayerControl(obj=g.player)
 
-    test = gameobj.GameObj(g.world)
-    test[gameobj.Location].move(2, 0)
-    test[gameobj.Graphic].ch = ord('U')
+    test = obj.GameObj(g.world)
+    test.location.move(2, 0)
+    test.graphic.ch = ord('U')
+    test.actor = obj.ActorTest(obj=test)
 
     tcod.console_set_custom_font(
         FONT,
@@ -32,5 +34,6 @@ def main():
         )
     with tcod.console_init_root(WIDTH, HEIGHT, TITLE, False) as g.console:
         tcod.sys_set_fps(60)
+        g.world.loop()
         current_state = state.GameState()
         current_state.push()

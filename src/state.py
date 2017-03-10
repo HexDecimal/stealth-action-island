@@ -12,13 +12,15 @@ class State(object):
         assert not self.__running
         self.__running = True
         while self.__running and not tcod.console_is_window_closed():
+            g.world.loop()
             self.on_draw()
             tcod.console_flush()
 
             key = tcod.Key()
             mouse = tcod.Mouse()
             while tcod.sys_check_for_event(tcod.EVENT_KEY, key, mouse):
-                self.on_key(key)
+                if key.pressed:
+                    self.on_key(key)
 
     def pop(self):
         assert self.__running
@@ -55,8 +57,11 @@ class GameState(State):
                     return attr
         print((inverse_key_const(key.vk), key.c, key.text))
         if key.vk in DIR_KEYS:
-            g.player[gameobj.Location].move_by(*DIR_KEYS[key.vk])
-            g.world.camera = g.player[gameobj.Location].xy
+            g.player.location.move_by(*DIR_KEYS[key.vk])
+            g.player.actor.action_time += 100
+            g.world.camera = g.player.location.xy
+        g.player.actor.schedule()
+        g.world.loop()
 
     def on_draw(self):
         cam_x, cam_y = g.world.camera
@@ -67,7 +72,7 @@ class GameState(State):
             g.world.terrain.get_graphic(cam_x, cam_y, cam_width, cam_height)
 
         for obj in g.world.objects.area(cam_x, cam_y, cam_width, cam_height):
-            if gameobj.Graphic not in obj:
+            if obj.graphic is None:
                 continue
             x, y = obj[gameobj.Location].xy
             x -= cam_x
