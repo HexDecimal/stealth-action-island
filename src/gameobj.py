@@ -1,5 +1,6 @@
 
 import state
+import g
 
 class Component(object):
     def __init__(self, obj, **kargs):
@@ -79,7 +80,7 @@ class Actor(Component):
 
 class ActorPlayerControl(Actor):
     def act(self):
-        pass
+        g.player = self.obj
 
 class ActorTest(Actor):
     def act(self):

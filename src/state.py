@@ -47,6 +47,18 @@ DIR_KEYS = {
     tcod.KEY_KP7: (-1, -1),
     tcod.KEY_KP8: (0, -1),
     tcod.KEY_KP9: (1, -1),
+
+    ord('h'): (-1, 0),
+    ord('j'): (0, 1),
+    ord('k'): (0, -1),
+    ord('l'): (1, 0),
+    ord('y'): (-1, -1),
+    ord('u'): (1, -1),
+    ord('b'): (-1, 1),
+    ord('n'): (1, 1),
+
+    ord('.'): (0, 0),
+    tcod.KEY_KP5: (0, 0),
     }
 
 class GameState(State):
@@ -56,8 +68,9 @@ class GameState(State):
                 if attr.startswith('KEY_') and getattr(tcod, attr) == vk:
                     return attr
         print((inverse_key_const(key.vk), key.c, key.text))
-        if key.vk in DIR_KEYS:
-            g.player.location.move_by(*DIR_KEYS[key.vk])
+        k = key.vk if key.vk != tcod.KEY_CHAR else key.c
+        if k in DIR_KEYS:
+            g.player.location.move_by(*DIR_KEYS[k])
             g.player.actor.action_time += 100
             g.world.camera = g.player.location.xy
         g.player.actor.schedule()
