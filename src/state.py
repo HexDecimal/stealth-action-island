@@ -1,8 +1,8 @@
 
 import tcod
 
-import main
 import gameobj
+import g
 
 class State(object):
     def __init__(self):
@@ -14,7 +14,11 @@ class State(object):
         while self.__running and not tcod.console_is_window_closed():
             self.on_draw()
             tcod.console_flush()
-            self.on_key(tcod.console_wait_for_keypress(False))
+
+            key = tcod.Key()
+            mouse = tcod.Mouse()
+            while tcod.sys_check_for_event(tcod.EVENT_KEY, key, mouse):
+                self.on_key(key)
 
     def pop(self):
         assert self.__running
@@ -51,26 +55,24 @@ class GameState(State):
                     return attr
         print((inverse_key_const(key.vk), key.c, key.text))
         if key.vk in DIR_KEYS:
-            main.player[gameobj.Location].move_by(*DIR_KEYS[key.vk])
-            main.world.camera = main.player[gameobj.Location].xy
+            g.player[gameobj.Location].move_by(*DIR_KEYS[key.vk])
+            g.world.camera = g.player[gameobj.Location].xy
 
     def on_draw(self):
-        console = main.console
-        world = main.world
-        cam_x, cam_y = world.camera
-        cam_width, cam_height = console.width, console.height
+        cam_x, cam_y = g.world.camera
+        cam_width, cam_height = g.console.width, g.console.height
         cam_x -= cam_width // 2
         cam_y -= cam_height // 2
-        console.ch[:], console.fg[:], console.bg[:] = \
-            world.terrain.get_graphic(cam_x, cam_y, cam_width, cam_height)
+        g.console.ch[:], g.console.fg[:], g.console.bg[:] = \
+            g.world.terrain.get_graphic(cam_x, cam_y, cam_width, cam_height)
 
-        for obj in world.objects.area(cam_x, cam_y, cam_width, cam_height):
+        for obj in g.world.objects.area(cam_x, cam_y, cam_width, cam_height):
             if gameobj.Graphic not in obj:
                 continue
             x, y = obj[gameobj.Location].xy
             x -= cam_x
             y -= cam_y
-            console.ch[y, x] = obj[gameobj.Graphic].ch
-            console.fg[y, x] = obj[gameobj.Graphic].fg
+            g.console.ch[y, x] = obj[gameobj.Graphic].ch
+            g.console.fg[y, x] = obj[gameobj.Graphic].fg
         tcod.console_flush()
 
