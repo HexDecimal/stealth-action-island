@@ -1,8 +1,13 @@
 
 import tcod
 
-import gameobj
 import g
+
+def inverse_key_const(vk):
+    for attr in dir(tcod):
+        if attr.startswith('KEY_') and getattr(tcod, attr) == vk:
+            return attr
+    return chr(vk)
 
 class State(object):
     def __init__(self):
@@ -19,6 +24,8 @@ class State(object):
             key = tcod.Key()
             mouse = tcod.Mouse()
             while tcod.sys_check_for_event(tcod.EVENT_KEY, key, mouse):
+                key.vk = key.vk if key.vk != tcod.KEY_CHAR else key.c
+                print((inverse_key_const(key.vk), key.c, key.text))
                 if key.pressed:
                     self.on_key(key)
 
@@ -32,6 +39,8 @@ class State(object):
     def on_draw(self):
         pass
 
+CANCEL_KEYS = [tcod.KEY_ESCAPE]
+MAP_KEYS = [ord('m')]
 
 DIR_KEYS = {
     tcod.KEY_UP: (0, -1),
@@ -63,17 +72,12 @@ DIR_KEYS = {
 
 class GameState(State):
     def on_key(self, key):
-        def inverse_key_const(vk):
-            for attr in dir(tcod):
-                if attr.startswith('KEY_') and getattr(tcod, attr) == vk:
-                    return attr
-        print((inverse_key_const(key.vk), key.c, key.text))
-        k = key.vk if key.vk != tcod.KEY_CHAR else key.c
-        if k in DIR_KEYS:
-            g.player.location.move_by(*DIR_KEYS[k])
+        if key.vk in DIR_KEYS:
+            g.player.location.move_by(*DIR_KEYS[key.vk])
             g.player.actor.action_time += 100
             g.world.camera = g.player.location.xy
-        g.player.actor.schedule()
+        if key.vk in MAP_KEYS:
+            MapState().push()
         g.world.loop()
 
     def on_draw(self):
@@ -87,10 +91,22 @@ class GameState(State):
         for obj in g.world.objects.area(cam_x, cam_y, cam_width, cam_height):
             if obj.graphic is None:
                 continue
-            x, y = obj[gameobj.Location].xy
+            x, y = obj.location.xy
             x -= cam_x
             y -= cam_y
-            g.console.ch[y, x] = obj[gameobj.Graphic].ch
-            g.console.fg[y, x] = obj[gameobj.Graphic].fg
+            g.console.ch[y, x] = obj.graphic.ch
+            g.console.fg[y, x] = obj.graphic.fg
         tcod.console_flush()
+
+class MapState(State):
+    def on_key(self, key):
+        if key.pressed and key.vk == tcod.KEY_TEXT:
+            return
+        #if key.vk in CANCEL_KEYS:
+        #    self.pop()
+        self.pop()
+
+    def on_draw(self):
+        g.console.ch[:], g.console.fg[:], g.console.bg[:] = \
+            g.world.terrain.get_map_graphic(g.console.width, g.console.height)
 

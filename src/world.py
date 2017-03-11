@@ -13,5 +13,7 @@ class World(object):
         self.scheduler = sched.Scheduler()
 
     def loop(self):
+        if not g.player.actor.is_scheduled and g.player.actor.action_time:
+            g.player.actor.schedule()
         while g.player.actor.is_scheduled:
             self.scheduler.next()

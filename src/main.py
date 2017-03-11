@@ -5,7 +5,7 @@ import tcod
 
 import state
 import g
-import gameobj as obj
+import obj
 import world
 
 #FONT = 'data/terminal8x8_gs_ro.png'

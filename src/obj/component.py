@@ -1,7 +1,4 @@
 
-import state
-import g
-
 class Component(object):
     def __init__(self, obj, **kargs):
         super().__init__(**kargs)
@@ -56,49 +53,3 @@ class Graphic(Component):
         yield self.ch
         yield self.fg
 
-class Actor(Component):
-    def __init__(self, **kargs):
-        super().__init__(**kargs)
-        self.is_scheduled = False
-        self.action_time = 0
-        self.schedule()
-
-    def schedule(self):
-        assert not self.is_scheduled
-        self.is_scheduled = True
-        self.obj.world.scheduler.schedule(self.action_time, self)
-        self.action_time = 0
-
-    def __call__(self):
-        assert self.is_scheduled
-        self.is_scheduled = False
-        if self.obj.actor is self:
-            self.act()
-
-    def act(self):
-        pass
-
-class ActorPlayerControl(Actor):
-    def act(self):
-        g.player = self.obj
-
-class ActorTest(Actor):
-    def act(self):
-        self.obj.location.move_by(0, -1)
-        self.action_time += 150
-        self.schedule()
-
-class GameObj(object):
-    def __init__(self, world):
-        self.world = world
-        self.components = {}
-        self.observers = {}
-        self.location = Location(obj=self)
-        self.graphic = Graphic(obj=self)
-        self.actor = None
-
-    def __getitem__(self, component_class):
-        return getattr(self, component_class.__name__.lower())
-
-    def __contains__(self, component_class):
-        return component_class in self.components
