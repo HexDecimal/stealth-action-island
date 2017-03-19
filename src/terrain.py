@@ -30,6 +30,7 @@ class HeightMap(object):
 
 class Terrain(object):
     def __init__(self):
+        super().__init__()
         self.radius = 1000
         self.chunk_shape = (256, 256)
         self.tiles = darray.DynamicArray(self.chunk_shape, np.uint8,

@@ -17,12 +17,13 @@ class State(object):
         assert not self.__running
         self.__running = True
         while self.__running and not tcod.console_is_window_closed():
-            g.world.loop()
+            g.model.scheduler.run_until_input_is_needed()
             self.on_draw()
             tcod.console_flush()
 
             key = tcod.Key()
             mouse = tcod.Mouse()
+            g.model.scheduler.run_until_input_is_needed()
             while tcod.sys_check_for_event(tcod.EVENT_KEY, key, mouse):
                 key.vk = key.vk if key.vk != tcod.KEY_CHAR else key.c
                 print((inverse_key_const(key.vk), key.c, key.text))
@@ -72,30 +73,31 @@ DIR_KEYS = {
 
 class GameState(State):
     def on_key(self, key):
+        player = g.model.scheduler.player
         if key.vk in DIR_KEYS:
-            g.player.location.move_by(*DIR_KEYS[key.vk])
-            g.player.actor.action_time += 100
-            g.world.camera = g.player.location.xy
+            player.actor.move(*DIR_KEYS[key.vk])
+            g.camera.location.move_to(*player.location.xyz)
         if key.vk in MAP_KEYS:
             MapState().push()
-        g.world.loop()
 
     def on_draw(self):
-        cam_x, cam_y = g.world.camera
+        cam_x, cam_y = g.camera.location.xy
         cam_width, cam_height = g.console.width, g.console.height
         cam_x -= cam_width // 2
         cam_y -= cam_height // 2
         g.console.ch[:], g.console.fg[:], g.console.bg[:] = \
-            g.world.terrain.get_graphic(cam_x, cam_y, cam_width, cam_height)
+            g.model.terrain.get_graphic(cam_x, cam_y, cam_width, cam_height)
 
-        for obj in g.world.objects.area(cam_x, cam_y, cam_width, cam_height):
-            if obj.graphic is None:
+        for obj in g.model.sparsemap.area(cam_x, cam_y, cam_width, cam_height):
+            try:
+                graphic = obj.graphic
+            except AttributeError:
                 continue
             x, y = obj.location.xy
             x -= cam_x
             y -= cam_y
-            g.console.ch[y, x] = obj.graphic.ch
-            g.console.fg[y, x] = obj.graphic.fg
+            g.console.ch[y, x] = graphic.ch
+            g.console.fg[y, x] = graphic.fg
         tcod.console_flush()
 
 class MapState(State):
@@ -108,5 +110,5 @@ class MapState(State):
 
     def on_draw(self):
         g.console.ch[:], g.console.fg[:], g.console.bg[:] = \
-            g.world.terrain.get_map_graphic(g.console.width, g.console.height)
+            g.model.terrain.get_map_graphic(g.console.width, g.console.height)
 

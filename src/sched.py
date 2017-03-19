@@ -3,6 +3,7 @@ import heapq
 
 class Scheduler(object):
     def __init__(self):
+        super().__init__()
         self.time = 0
         self.pqueue = []
         self._next_id = 0
